@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/college_logo.png" width="180">
+  <img src="EJUST.png" width="180">
 </p>
 
 <h1 align="center">
