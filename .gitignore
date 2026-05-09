@@ -40,9 +40,9 @@ Thumbs.db
 
 # Model Files
 
-*.pth
+
 *.pt
-*.pkl
+
 *.ckpt
 
 # Dataset Files
