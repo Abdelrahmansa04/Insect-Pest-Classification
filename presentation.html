@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deep Learning-Based Insect Pest Classification</title>
+  <link rel="stylesheet" href="presentation.css">
+</head>
+<body>
+  <nav class="deck-nav">
+    <button id="prev" aria-label="Previous slide">‹</button>
+    <span id="counter">01 / 20</span>
+    <button id="next" aria-label="Next slide">›</button>
+    <a href="pest_classification_defense.pptx" download>Download PPTX</a>
+  </nav>
+  <div class="deck">
+    <section class="slide cover-slide" data-slide="1" id="title">
+    <div class="slide-bg"></div>
+    <header><p>Graduation Project Defense</p><span>01 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Deep Learning-Based Insect Pest Classification</h1>
+        <h2>Using ResNet50, FPN, Attention Networks, MMAL-Net, and Ensemble Learning</h2>
+        <div class="meta"><span>Student: [Student Name]</span><span>Supervisor: [Supervisor Name]</span><span>University: [University Name]</span><span>Department: [Department Name]</span></div>
+        
+        
+        
+        
+      </div>
+      <aside><div class="arch cover"><div class="arch-node"><i>1</i><span>Input Image</span></div><b></b><div class="arch-node"><i>2</i><span>CNN</span></div><b></b><div class="arch-node"><i>3</i><span>Attention</span></div><b></b><div class="arch-node"><i>4</i><span>Ensemble</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="2" id="intro">
+    <div class="slide-bg"></div>
+    <header><p>01 / Context</p><span>02 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Agriculture needs fast, reliable pest recognition</h1>
+        
+        
+        <ul class="bullets"><li>Pests reduce crop quality and yield</li><li>Early identification supports timely treatment</li><li>Manual inspection is slow and specialist-dependent</li><li>Computer vision can scale field diagnosis</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="arch agriImpact"><div class="arch-node"><i>1</i><span>Crop</span></div><b></b><div class="arch-node"><i>2</i><span>Pest</span></div><b></b><div class="arch-node"><i>3</i><span>Damage</span></div><b></b><div class="arch-node"><i>4</i><span>Decision</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="3" id="problem">
+    <div class="slide-bg"></div>
+    <header><p>02 / Problem</p><span>03 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Manual insect identification is hard to scale</h1>
+        
+        
+        <ul class="bullets"><li>Fine-grained visual similarity between species</li><li>Large appearance variation across life stages</li><li>Lighting, pose, and background noise in images</li><li>Need for an automated AI-based solution</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="arch problemLens"><div class="arch-node"><i>1</i><span>Similarity</span></div><b></b><div class="arch-node"><i>2</i><span>Noise</span></div><b></b><div class="arch-node"><i>3</i><span>Imbalance</span></div><b></b><div class="arch-node"><i>4</i><span>Scale</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="4" id="objectives">
+    <div class="slide-bg"></div>
+    <header><p>03 / Objectives</p><span>04 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Project objectives</h1>
+        
+        
+        <ul class="bullets"><li>Build an intelligent insect classification system</li><li>Improve recognition accuracy using deep features</li><li>Compare ResNet50, FPN, RAN, MMAL-Net, and ensemble learning</li><li>Deploy a practical application for image upload and prediction</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="arch targets"><div class="arch-node"><i>1</i><span>Build</span></div><b></b><div class="arch-node"><i>2</i><span>Improve</span></div><b></b><div class="arch-node"><i>3</i><span>Compare</span></div><b></b><div class="arch-node"><i>4</i><span>Deploy</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="5" id="dataset">
+    <div class="slide-bg"></div>
+    <header><p>04 / Dataset</p><span>05 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>IP102: large-scale insect pest benchmark</h1>
+        
+        
+        <ul class="bullets"><li>Natural long-tailed class distribution</li><li>Multiple crop groups and pest categories</li><li>Suitable for fine-grained pest recognition</li></ul>
+        <div class="stat-grid"><div class="stat"><strong>102</strong><span>Classes</span></div><div class="stat"><strong>75,222</strong><span>Images</span></div><div class="stat"><strong>~19K boxes</strong><span>Detection labels</span></div><div class="stat"><strong>Train / Val / Test</strong><span>Split</span></div></div>
+        
+        
+      </div>
+      <aside><div class="arch datasetGrid"><div class="arch-node"><i>1</i><span>102 classes</span></div><b></b><div class="arch-node"><i>2</i><span>75,222 images</span></div><b></b><div class="arch-node"><i>3</i><span>Long-tail</span></div><b></b><div class="arch-node"><i>4</i><span>Annotations</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="6" id="preprocessing">
+    <div class="slide-bg"></div>
+    <header><p>05 / Data Pipeline</p><span>06 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Preprocessing prepares images for robust training</h1>
+        
+        
+        <ul class="bullets"><li>Resize images to model input size</li><li>Normalize RGB channels</li><li>Apply augmentation during training</li><li>Use PyTorch transforms for reproducible preprocessing</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="code-card"><code>Resize(224, 224)</code><code>RandomHorizontalFlip()</code><code>ColorJitter()</code><code>Normalize(mean, std)</code></div><div class="arch preprocess"><div class="arch-node"><i>1</i><span>Resize</span></div><b></b><div class="arch-node"><i>2</i><span>Normalize</span></div><b></b><div class="arch-node"><i>3</i><span>Augment</span></div><b></b><div class="arch-node"><i>4</i><span>Tensor</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="7" id="workflow">
+    <div class="slide-bg"></div>
+    <header><p>06 / System Workflow</p><span>07 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>End-to-end classification pipeline</h1>
+        
+        
+        
+        
+        
+        
+      </div>
+      <aside><div class="pipeline"><div class="pipe-step"><span>01</span>Input Image</div><div class="pipe-arrow">→</div><div class="pipe-step"><span>02</span>Preprocessing</div><div class="pipe-arrow">→</div><div class="pipe-step"><span>03</span>Deep Models</div><div class="pipe-arrow">→</div><div class="pipe-step"><span>04</span>Soft Voting Ensemble</div><div class="pipe-arrow">→</div><div class="pipe-step"><span>05</span>Final Prediction</div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="8" id="resnet">
+    <div class="slide-bg"></div>
+    <header><p>07 / Model A</p><span>08 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>ResNet50 learns deeper features with residual connections</h1>
+        
+        
+        <ul class="bullets"><li>Residual blocks pass information through skip connections</li><li>Skip paths reduce vanishing gradient issues</li><li>Pretrained ImageNet features improve transfer learning</li><li>Strong baseline for image classification</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="arch resnetArch"><div class="arch-node"><i>1</i><span>Input</span></div><b></b><div class="arch-node"><i>2</i><span>Conv</span></div><b></b><div class="arch-node"><i>3</i><span>Residual Block</span></div><b></b><div class="arch-node"><i>4</i><span>Classifier</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="9" id="fpn">
+    <div class="slide-bg"></div>
+    <header><p>08 / Model B</p><span>09 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>FPN adds multi-scale feature reasoning</h1>
+        
+        
+        <ul class="bullets"><li>Combines high-level semantics with low-level spatial detail</li><li>Top-down pathway strengthens smaller object features</li><li>Lateral connections preserve resolution</li><li>Useful when insects occupy small image regions</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="arch fpnArch"><div class="arch-node"><i>1</i><span>C2</span></div><b></b><div class="arch-node"><i>2</i><span>C3</span></div><b></b><div class="arch-node"><i>3</i><span>C4</span></div><b></b><div class="arch-node"><i>4</i><span>P2-P5</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="10" id="ran">
+    <div class="slide-bg"></div>
+    <header><p>09 / Attention Model</p><span>10 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Residual Attention Network focuses the feature stream</h1>
+        
+        
+        <ul class="bullets"><li>Trunk branch extracts normal CNN features</li><li>Mask branch learns soft attention weights</li><li>Attention highlights informative insect regions</li><li>Residual attention keeps original signal available</li></ul>
+        
+        
+        <div class="equation">H(x) = (1 + M(x)) x F(x)</div>
+      </div>
+      <aside><div class="arch ranArch"><div class="arch-node"><i>1</i><span>Input</span></div><b></b><div class="arch-node"><i>2</i><span>Trunk F(x)</span></div><b></b><div class="arch-node"><i>3</i><span>Mask M(x)</span></div><b></b><div class="arch-node"><i>4</i><span>H(x)</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="11" id="mmal">
+    <div class="slide-bg"></div>
+    <header><p>10 / Fine-Grained Model</p><span>11 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>MMAL-Net targets fine-grained insect differences</h1>
+        
+        
+        <ul class="bullets"><li>AOLM localizes the attention object region</li><li>APPM proposes discriminative insect parts</li><li>Raw branch captures global context</li><li>Object and part branches refine fine details</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="arch mmalArch"><div class="arch-node"><i>1</i><span>Raw</span></div><b></b><div class="arch-node"><i>2</i><span>AOLM</span></div><b></b><div class="arch-node"><i>3</i><span>APPM</span></div><b></b><div class="arch-node"><i>4</i><span>Parts</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="12" id="ensemble">
+    <div class="slide-bg"></div>
+    <header><p>11 / Ensemble</p><span>12 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Soft voting combines model confidence</h1>
+        
+        
+        <ul class="bullets"><li>Average probability vectors from trained models</li><li>Reduces dependence on one architecture</li><li>Balances global, multi-scale, and attention features</li><li>Improves robustness for ambiguous samples</li></ul>
+        
+        
+        <div class="equation">P = (P1 + P2 + P3 + P4) / 4</div>
+      </div>
+      <aside><div class="arch ensemble"><div class="arch-node"><i>1</i><span>ResNet</span></div><b></b><div class="arch-node"><i>2</i><span>FPN</span></div><b></b><div class="arch-node"><i>3</i><span>RAN</span></div><b></b><div class="arch-node"><i>4</i><span>MMAL</span></div><b></b><div class="arch-node"><i>5</i><span>Vote</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="13" id="training">
+    <div class="slide-bg"></div>
+    <header><p>13 / Training Setup</p><span>13 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Training environment and hyperparameters</h1>
+        
+        
+        
+        
+        <table class="spec-table"><tbody><tr><th>Platform</th><td>Google Colab</td></tr><tr><th>GPU</th><td>NVIDIA T4</td></tr><tr><th>Batch size</th><td>[Set value]</td></tr><tr><th>Learning rate</th><td>[Set value]</td></tr><tr><th>Optimizer</th><td>Adam / SGD</td></tr><tr><th>Epochs</th><td>10</td></tr><tr><th>Loss</th><td>Cross-Entropy</td></tr></tbody></table>
+        
+      </div>
+      <aside><div class="arch training"><div class="arch-node"><i>1</i><span>Colab</span></div><b></b><div class="arch-node"><i>2</i><span>T4 GPU</span></div><b></b><div class="arch-node"><i>3</i><span>CE Loss</span></div><b></b><div class="arch-node"><i>4</i><span>Checkpoint</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="14" id="results">
+    <div class="slide-bg"></div>
+    <header><p>14 / Experimental Results</p><span>14 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Baseline and FPN models show steady learning</h1>
+        
+        
+        <ul class="bullets"><li>ResNet50 best validation accuracy: 67.99%</li><li>ResNet50 + FPN best validation accuracy: 65.89%</li><li>Training accuracy increases across epochs</li><li>Validation curves show generalization gap near the end</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="curve-grid">
+      <figure><img src="../fpn+resnet.png" alt="ResNet50 + FPN training curves"><figcaption>ResNet50 + FPN training curves</figcaption></figure>
+      <figure><img src="../resnet_baseline.png" alt="ResNet50 training curves"><figcaption>ResNet50 baseline training curves</figcaption></figure>
+    </div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="15" id="best">
+    <div class="slide-bg"></div>
+    <header><p>15 / Best Model</p><span>15 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Best completed run: ResNet50 validation accuracy 67.99%</h1>
+        
+        
+        <ul class="bullets"><li>Best validation checkpoint at epoch 10</li><li>Useful baseline for later ensemble comparison</li><li>Top-5 predictions can support transparent model output</li></ul>
+        <div class="stat-grid"><div class="stat"><strong>0.6735</strong><span>Accuracy</span></div><div class="stat"><strong>0.6358</strong><span>Precision</span></div><div class="stat"><strong>0.5780</strong><span>Recall</span></div><div class="stat"><strong>0.5879</strong><span>F1-score</span></div></div>
+        
+        
+      </div>
+      <aside><div class="arch bestModel"><div class="arch-node"><i>1</i><span>Top-1</span></div><b></b><div class="arch-node"><i>2</i><span>Top-5</span></div><b></b><div class="arch-node"><i>3</i><span>Confidence</span></div><b></b><div class="arch-node"><i>4</i><span>Prediction</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="16" id="deployment">
+    <div class="slide-bg"></div>
+    <header><p>16 / Deployment</p><span>16 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Streamlit turns the model into a usable application</h1>
+        
+        
+        <ul class="bullets"><li>Image upload interface</li><li>Real-time pest class prediction</li><li>Confidence score visualization</li><li>Top-5 class probabilities for decision support</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="ui-mock">
+      <div class="ui-top"></div><div class="ui-body"><div class="upload">Upload insect image</div><div class="preview"></div><div class="prediction">Predicted class<br><strong>pest species</strong><span>Confidence 87%</span></div></div>
+    </div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="17" id="challenges">
+    <div class="slide-bg"></div>
+    <header><p>17 / Challenges</p><span>17 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Main challenges during implementation</h1>
+        
+        
+        <ul class="bullets"><li>Google Colab disconnections during long runs</li><li>Large training time and GPU limits</li><li>Fine-grained similarity between pest classes</li><li>Checkpoint and experiment management</li><li>Deployment path and dependency issues</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="arch challenges"><div class="arch-node"><i>1</i><span>Runtime</span></div><b></b><div class="arch-node"><i>2</i><span>Training</span></div><b></b><div class="arch-node"><i>3</i><span>Similarity</span></div><b></b><div class="arch-node"><i>4</i><span>Deploy</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="18" id="future">
+    <div class="slide-bg"></div>
+    <header><p>18 / Future Work</p><span>18 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Future work can move the system closer to field use</h1>
+        
+        
+        <ul class="bullets"><li>Evaluate Vision Transformers</li><li>Optimize for mobile deployment</li><li>Add real-time pest detection</li><li>Explore Edge AI inference</li><li>Improve attention mechanisms and class balancing</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="arch future"><div class="arch-node"><i>1</i><span>ViT</span></div><b></b><div class="arch-node"><i>2</i><span>Mobile</span></div><b></b><div class="arch-node"><i>3</i><span>Edge AI</span></div><b></b><div class="arch-node"><i>4</i><span>Detection</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide" data-slide="19" id="conclusion">
+    <div class="slide-bg"></div>
+    <header><p>19 / Conclusion</p><span>19 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Deep learning enables scalable pest classification</h1>
+        
+        
+        <ul class="bullets"><li>Built a complete image classification pipeline</li><li>Compared baseline and enhanced model families</li><li>Achieved strong completed baseline performance</li><li>Prepared a deployable Streamlit user workflow</li><li>Supports smart agriculture decision-making</li></ul>
+        
+        
+        
+      </div>
+      <aside><div class="arch conclusion"><div class="arch-node"><i>1</i><span>Pipeline</span></div><b></b><div class="arch-node"><i>2</i><span>Models</span></div><b></b><div class="arch-node"><i>3</i><span>Results</span></div><b></b><div class="arch-node"><i>4</i><span>App</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+<section class="slide end-slide" data-slide="20" id="questions">
+    <div class="slide-bg"></div>
+    <header><p>20 / Questions</p><span>20 / 20</span></header>
+    <main>
+      <div class="copy">
+        <h1>Thank You</h1>
+        <h2>Questions?</h2>
+        
+        
+        
+        
+        
+      </div>
+      <aside><div class="arch questions"><div class="arch-node"><i>1</i><span>Defense</span></div><b></b><div class="arch-node"><i>2</i><span>Discussion</span></div><b></b><div class="arch-node"><i>3</i><span>Next Steps</span></div></div></aside>
+    </main>
+    <footer>Deep Learning-Based Insect Pest Classification</footer>
+  </section>
+  </div>
+  <script src="presentation.js"></script>
+</body>
+</html>
