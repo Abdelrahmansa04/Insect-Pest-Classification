@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="EJUST.png" width="180">
+  <img src="EJUST.png" width="100%">
 </p>
 
 <h1 align="center">
