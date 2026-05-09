@@ -1,837 +1,397 @@
 import streamlit as st
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms, models
+import torchvision.ops as ops
 from PIL import Image
-import time
+import os
 
-# ─────────────────────────────────────────────────────────────────────────────
+# =====================================================
 # PAGE CONFIG
-# ─────────────────────────────────────────────────────────────────────────────
+# =====================================================
 
 st.set_page_config(
-    page_title="PestID · Insect Intelligence",
-    page_icon="🔬",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    page_title="D0 Insect Classification",
+    page_icon="🐛",
+    layout="centered"
 )
 
-# ─────────────────────────────────────────────────────────────────────────────
-# DESIGN SYSTEM — Dark Cinematic Theme
-# ─────────────────────────────────────────────────────────────────────────────
+# =====================================================
+# STYLE
+# =====================================================
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@300;400;500;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
-/* ── Tokens ── */
-:root {
-    --bg-deep:      #080C10;
-    --bg-base:      #0D1117;
-    --bg-panel:     #111820;
-    --bg-card:      #141C26;
-    --bg-card-hover:#182030;
-    --bg-lift:      #1C2535;
-    --border-sub:   rgba(255,255,255,0.04);
-    --border:       rgba(255,255,255,0.08);
-    --border-mid:   rgba(255,255,255,0.13);
-    --border-hi:    rgba(255,255,255,0.22);
-    --teal:         #00E5C8;
-    --teal-dim:     rgba(0,229,200,0.12);
-    --teal-border:  rgba(0,229,200,0.28);
-    --teal-glow:    rgba(0,229,200,0.06);
-    --teal-dark:    #00A090;
-    --blue:         #4D9FFF;
-    --blue-dim:     rgba(77,159,255,0.12);
-    --amber:        #F5A623;
-    --amber-dim:    rgba(245,166,35,0.12);
-    --red:          #FF5C6A;
-    --red-dim:      rgba(255,92,106,0.12);
-    --green:        #34D058;
-    --green-dim:    rgba(52,208,88,0.12);
-    --text-primary: #E8EDF5;
-    --text-sec:     #8898AA;
-    --text-muted:   #4D5F73;
-    --text-hint:    #2E3D50;
-    --radius-sm:    6px;
-    --radius-md:    10px;
-    --radius-lg:    16px;
-    --radius-xl:    22px;
+.main {
+    background-color: #0E1117;
 }
 
-/* ── Reset ── */
-html, body,
-[data-testid="stAppViewContainer"],
-[data-testid="stMain"], .main {
-    background: var(--bg-base) !important;
-    font-family: 'Cabinet Grotesk', sans-serif !important;
-    color: var(--text-primary) !important;
+h1, h2, h3, h4 {
+    color: white;
 }
 
-.block-container {
-    padding: 0 2.75rem 3rem !important;
-    max-width: 1280px !important;
+.stButton>button {
+    width: 100%;
+    border-radius: 10px;
+    height: 3em;
+    font-size: 18px;
 }
 
-#MainMenu, footer, header { visibility: hidden !important; }
-[data-testid="stDecoration"] { display: none !important; }
-
-/* ── Sidebar ── */
-[data-testid="stSidebar"] {
-    background: var(--bg-panel) !important;
-    border-right: 1px solid var(--border) !important;
-}
-[data-testid="stSidebarContent"] {
-    padding: 2.25rem 1.75rem !important;
-}
-[data-testid="stSidebar"] * { color: var(--text-primary) !important; }
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg-deep); }
-::-webkit-scrollbar-thumb { background: var(--bg-lift); border-radius: 4px; }
-
-/* ── File uploader ── */
-[data-testid="stFileUploader"] {
-    background: var(--bg-card) !important;
-    border: 1.5px dashed var(--border-mid) !important;
-    border-radius: var(--radius-lg) !important;
-    padding: 2rem 1.5rem !important;
-    transition: border-color 0.25s, background 0.25s;
-}
-[data-testid="stFileUploader"]:hover {
-    background: var(--bg-card-hover) !important;
-    border-color: var(--teal-border) !important;
-}
-[data-testid="stFileUploadDropzone"] { background: transparent !important; }
-[data-testid="stFileUploader"] label,
-[data-testid="stFileUploader"] p,
-[data-testid="stFileUploader"] small,
-[data-testid="stFileUploader"] span {
-    color: var(--text-sec) !important;
-    font-size: 13px !important;
-    font-family: 'Cabinet Grotesk', sans-serif !important;
-}
-
-/* ── Image ── */
-[data-testid="stImage"] img {
-    border-radius: var(--radius-lg) !important;
-    border: 1px solid var(--border-mid) !important;
-}
-
-/* ── Button ── */
-[data-testid="stButton"] > button {
-    background: var(--teal) !important;
-    color: #04100E !important;
-    border: none !important;
-    border-radius: var(--radius-md) !important;
-    font-family: 'Cabinet Grotesk', sans-serif !important;
-    font-weight: 700 !important;
-    font-size: 14px !important;
-    letter-spacing: 0.03em !important;
-    height: 3rem !important;
-    width: 100% !important;
-    transition: opacity 0.2s, transform 0.1s !important;
-}
-[data-testid="stButton"] > button:hover {
-    opacity: 0.88 !important;
-    transform: translateY(-1px) !important;
-}
-[data-testid="stButton"] > button:active { transform: translateY(0) !important; }
-
-/* ── Spinner ── */
-[data-testid="stSpinner"] > div { border-top-color: var(--teal) !important; }
-
-/* ── HR ── */
-hr { border: none !important; border-top: 1px solid var(--border) !important; margin: 0 !important; }
-
-/* ── Markdown ── */
-[data-testid="stMarkdownContainer"] p {
-    color: var(--text-sec) !important;
-    font-size: 13px !important;
-    line-height: 1.7 !important;
-}
-
-/* ─────────────────────────────
-   COMPONENTS
-───────────────────────────── */
-
-/* Topbar */
-.topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 0;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid var(--border);
-}
-.logo-mark {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.logo-icon {
-    width: 32px; height: 32px;
-    background: var(--teal-dim);
-    border: 1px solid var(--teal-border);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-}
-.logo-text {
-    font-size: 18px; font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.03em;
-}
-.logo-dot { color: var(--teal); }
-.nav-pills {
-    display: flex; align-items: center; gap: 8px;
-}
-.nav-pill {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; letter-spacing: 0.1em;
-    text-transform: uppercase;
-    border: 1px solid var(--border-mid);
-    border-radius: 100px;
-    padding: 4px 12px;
-    color: var(--text-muted);
-    background: var(--bg-card);
-}
-.nav-pill.active {
-    border-color: var(--teal-border);
-    color: var(--teal);
-    background: var(--teal-dim);
-}
-
-/* Section label */
-.slabel {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 0.7rem;
-    display: flex; align-items: center; gap: 8px;
-}
-.slabel::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border-sub);
-}
-
-/* Empty state */
-.empty {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 10px;
-    padding: 4rem 2rem;
-    background: var(--bg-card);
-    border: 1px dashed var(--border-mid);
-    border-radius: var(--radius-lg);
-    text-align: center;
-}
-.empty-icon { font-size: 28px; opacity: 0.25; }
-.empty-title { font-size: 14px; font-weight: 500; color: var(--text-sec); }
-.empty-sub { font-size: 12px; color: var(--text-muted); max-width: 200px; line-height: 1.6; }
-
-/* Result card */
-.result-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-mid);
-    border-radius: var(--radius-lg);
-    padding: 1.75rem;
-    margin-bottom: 1.25rem;
-    position: relative;
-    overflow: hidden;
-}
-.result-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg,
-        transparent 0%,
-        var(--teal-border) 30%,
-        var(--teal-border) 70%,
-        transparent 100%);
-}
-.result-eyebrow {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--teal);
-    margin-bottom: 0.4rem;
-}
-.result-name {
-    font-size: 26px; font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.03em;
-    line-height: 1.15;
-    margin-bottom: 1.25rem;
-}
-.conf-meta {
-    display: flex; justify-content: space-between;
-    align-items: baseline; margin-bottom: 7px;
-}
-.conf-label { font-size: 12px; color: var(--text-muted); }
-.conf-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 20px; font-weight: 500;
-    color: var(--text-primary);
-}
-.conf-track {
-    height: 6px;
-    background: var(--bg-lift);
-    border-radius: 100px;
-    overflow: hidden;
-}
-.conf-fill { height: 6px; border-radius: 100px; }
-.status-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 0.02em;
-    border-radius: 100px;
-    padding: 5px 14px;
-    margin-top: 1.1rem;
-}
-
-/* Stats row */
-.stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 1.25rem;
-}
-.stat-cell {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 1rem;
-    text-align: center;
-}
-.stat-cell-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-}
-.stat-cell-value {
-    font-size: 20px; font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
-}
-.stat-cell-value.teal { color: var(--teal); }
-
-/* Ranking table */
-.rank-table {
-    background: var(--bg-card);
-    border: 1px solid var(--border-mid);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-}
-.rank-thead {
-    display: grid;
-    grid-template-columns: 42px 1fr 110px 58px;
-    padding: 0.55rem 1.25rem;
-    background: var(--bg-lift);
-    border-bottom: 1px solid var(--border);
-}
-.th {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8px; letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
-.rank-row {
-    display: grid;
-    grid-template-columns: 42px 1fr 110px 58px;
-    padding: 0.75rem 1.25rem;
-    align-items: center;
-    border-bottom: 1px solid var(--border-sub);
-    transition: background 0.15s;
-}
-.rank-row:last-child { border-bottom: none; }
-.rank-row:hover { background: var(--bg-card-hover); }
-.rank-row.r1 {
-    background: linear-gradient(90deg, rgba(0,229,200,0.06) 0%, transparent 60%);
-    border-bottom: 1px solid var(--border);
-}
-.rank-num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--text-muted);
-}
-.rank-num.r1 { color: var(--teal); font-weight: 500; }
-.rank-name { font-size: 13px; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px; }
-.rank-name.r1 { color: var(--text-primary); font-weight: 700; }
-.bar-wrap { height: 4px; background: var(--bg-lift); border-radius: 100px; overflow: hidden; }
-.bar-fill { height: 4px; border-radius: 100px; background: var(--border-hi); }
-.bar-fill.r1 { background: var(--teal); }
-.rank-pct {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--text-muted); text-align: right;
-}
-.rank-pct.r1 { color: var(--teal); }
-
-/* Chip */
-.chip {
-    display: inline-block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; letter-spacing: 0.1em;
-    text-transform: uppercase;
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    padding: 3px 10px;
-    color: var(--text-muted);
-    background: var(--bg-card);
-}
-.chip.live {
-    border-color: var(--teal-border);
-    color: var(--teal);
-    background: var(--teal-dim);
-}
-
-/* Live pulse dot */
-.live-dot {
-    display: inline-block;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--teal);
-    animation: pulse 1.8s ease-in-out infinite;
-    vertical-align: middle;
-    margin-right: 5px;
-}
-@keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.35; transform: scale(0.7); }
-}
-
-/* Sidebar */
-.sb-wordmark {
-    font-size: 20px; font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.03em;
-}
-.sb-wordmark span { color: var(--teal); }
-.sb-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
-.sb-section {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8px; letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin: 1.5rem 0 0.65rem;
-}
-.sb-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border-sub);
-    font-size: 12px;
-}
-.sb-row-label { color: var(--text-muted); }
-.sb-row-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-sec); }
-.sb-tag {
-    display: inline-block;
-    font-size: 10px; font-family: 'JetBrains Mono', monospace;
-    background: var(--bg-lift);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 2px 8px;
-    color: var(--text-muted);
-    margin: 2px 2px 2px 0;
-}
-.sb-step {
-    display: flex; align-items: flex-start; gap: 10px;
-    font-size: 12px; color: var(--text-sec);
-    padding: 0.4rem 0;
-    line-height: 1.5;
-}
-.sb-step-num {
-    width: 18px; height: 18px; min-width: 18px;
-    border-radius: 50%;
-    background: var(--bg-lift);
-    border: 1px solid var(--border-mid);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; color: var(--text-muted);
-    display: flex; align-items: center; justify-content: center;
-    margin-top: 1px;
-}
-
-/* Page heading */
-.page-hero {
-    margin-bottom: 2.25rem;
-}
-.page-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--teal);
-    margin-bottom: 0.5rem;
-}
-.page-title {
-    font-size: 36px; font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.04em;
-    line-height: 1.1;
-    margin: 0 0 0.6rem;
-}
-.page-desc {
-    font-size: 14px; color: var(--text-sec);
-    max-width: 500px; line-height: 1.7;
-    margin: 0;
-}
-
-/* File name row */
-.file-meta {
-    display: flex; justify-content: space-between;
-    margin-top: 0.6rem; padding: 0 2px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; color: var(--text-muted);
-}
 </style>
 """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# DEVICE & MODEL
-# ─────────────────────────────────────────────────────────────────────────────
+# =====================================================
+# TITLE
+# =====================================================
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+st.title("🐛 D0 Insect Classification")
 
-with open("classes.txt", "r") as f:
-    class_names = [line.strip() for line in f.readlines()]
+st.markdown("""
+This application classifies insect images using:
+
+✅ ResNet50 + FPN  
+✅ PyTorch  
+✅ Streamlit
+""")
+
+# =====================================================
+# DEVICE
+# =====================================================
+
+device = torch.device(
+    "cuda" if torch.cuda.is_available() else "cpu"
+)
+
+# =====================================================
+# D0 CLASS ORDER
+# IMPORTANT:
+# MUST MATCH EXACT TRAINING FOLDER ORDER
+# =====================================================
+
+class_names = [
+
+    "0",
+    "1",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "2",
+    "20",
+    "21",
+    "22",
+    "23",
+    "24",
+    "25",
+    "26",
+    "27",
+    "28",
+    "29",
+    "3",
+    "30",
+    "31",
+    "32",
+    "33",
+    "34",
+    "35",
+    "36",
+    "37",
+    "38",
+    "39",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9"
+]
+
 NUM_CLASSES = len(class_names)
 
+# =====================================================
+# IMAGE TRANSFORM
+# MUST MATCH TRAINING
+# =====================================================
+
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+
+    transforms.Resize((256, 256)),
+
+    transforms.CenterCrop((224, 224)),
+
+    transforms.ToTensor()
 ])
+
+# =====================================================
+# RESNET50 + FPN MODEL
+# =====================================================
+
+class ResNetFPN(nn.Module):
+
+    def __init__(self, num_classes):
+
+        super().__init__()
+
+        backbone = models.resnet50(weights=None)
+
+        self.layer0 = nn.Sequential(
+            backbone.conv1,
+            backbone.bn1,
+            backbone.relu,
+            backbone.maxpool
+        )
+
+        self.layer1 = backbone.layer1
+        self.layer2 = backbone.layer2
+        self.layer3 = backbone.layer3
+        self.layer4 = backbone.layer4
+
+        self.fpn = ops.FeaturePyramidNetwork(
+            in_channels_list=[256, 512, 1024, 2048],
+            out_channels=256
+        )
+
+        self.pool = nn.AdaptiveAvgPool2d(1)
+
+        self.fc = nn.Linear(
+            256 * 4,
+            num_classes
+        )
+
+    def forward(self, x):
+
+        c1 = self.layer0(x)
+
+        c2 = self.layer1(c1)
+
+        c3 = self.layer2(c2)
+
+        c4 = self.layer3(c3)
+
+        c5 = self.layer4(c4)
+
+        features = {
+            "0": c2,
+            "1": c3,
+            "2": c4,
+            "3": c5
+        }
+
+        pyramid = self.fpn(features)
+
+        pooled = []
+
+        for p in pyramid.values():
+
+            pooled.append(
+                self.pool(p).flatten(1)
+            )
+
+        out = torch.cat(pooled, dim=1)
+
+        out = self.fc(out)
+
+        return out
+
+# =====================================================
+# LOAD MODEL
+# =====================================================
 
 @st.cache_resource
 def load_model():
-    m = models.resnet50(pretrained=False)
-    m.fc = torch.nn.Linear(m.fc.in_features, NUM_CLASSES)
-    m.load_state_dict(torch.load("models/resnet50_best.pth", map_location=device))
-    m.to(device).eval()
-    return m
+
+    model = ResNetFPN(NUM_CLASSES)
+
+    checkpoint = torch.load(
+        "models/resnet50_fpn_best.pth",
+        map_location=device
+    )
+
+    # HANDLE DIFFERENT SAVE FORMATS
+
+    if isinstance(checkpoint, dict):
+
+        if "model_state_dict" in checkpoint:
+
+            state_dict = checkpoint["model_state_dict"]
+
+        else:
+
+            state_dict = checkpoint
+
+    else:
+
+        state_dict = checkpoint
+
+    # REMOVE module. PREFIX
+
+    new_state_dict = {}
+
+    for k, v in state_dict.items():
+
+        if k.startswith("module."):
+
+            k = k[7:]
+
+        new_state_dict[k] = v
+
+    model.load_state_dict(
+        new_state_dict,
+        strict=True
+    )
+
+    model.to(device)
+
+    model.eval()
+
+    return model
+
+# =====================================================
+# LOAD MODEL
+# =====================================================
 
 model = load_model()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# SIDEBAR
-# ─────────────────────────────────────────────────────────────────────────────
+# =====================================================
+# IMAGE UPLOADER
+# =====================================================
 
-with st.sidebar:
-    st.markdown(f"""
-<div style="margin-bottom:1.75rem;">
-  <div class="sb-wordmark">Pest<span>ID</span></div>
-  <div class="sb-sub">v2.0 · LIVE INFERENCE</div>
-</div>
-<div style="height:1px;background:var(--border);"></div>
+uploaded_file = st.file_uploader(
+    "Upload Insect Image",
+    type=[
+        "jpg",
+        "jpeg",
+        "png",
+        "bmp",
+        "webp",
+        "tiff"
+    ]
+)
 
-<div class="sb-section">System</div>
-<div class="sb-row">
-  <span class="sb-row-label">Status</span>
-  <span class="sb-row-val"><span class="live-dot"></span>Online</span>
-</div>
-<div class="sb-row">
-  <span class="sb-row-label">Device</span>
-  <span class="sb-row-val">{str(device).upper()}</span>
-</div>
-<div class="sb-row">
-  <span class="sb-row-label">Classes</span>
-  <span class="sb-row-val">{NUM_CLASSES} species</span>
-</div>
-<div class="sb-row" style="border:none;">
-  <span class="sb-row-label">Precision</span>
-  <span class="sb-row-val">FP32</span>
-</div>
+# =====================================================
+# PREDICTION
+# =====================================================
 
-<div class="sb-section">Model</div>
-<div class="sb-row">
-  <span class="sb-row-label">Architecture</span>
-  <span class="sb-row-val">ResNet-50</span>
-</div>
-<div class="sb-row">
-  <span class="sb-row-label">Training</span>
-  <span class="sb-row-val">Transfer</span>
-</div>
-<div class="sb-row" style="border:none;">
-  <span class="sb-row-label">Dataset</span>
-  <span class="sb-row-val">IP102</span>
-</div>
+if uploaded_file is not None:
 
-<div class="sb-section">Stack</div>
-<div style="margin-bottom:1.25rem;">
-  <span class="sb-tag">PyTorch</span>
-  <span class="sb-tag">torchvision</span>
-  <span class="sb-tag">Streamlit</span>
-  <span class="sb-tag">CUDA</span>
-</div>
+    try:
 
-<div style="height:1px;background:var(--border);"></div>
-
-<div class="sb-section">Workflow</div>
-<div class="sb-step">
-  <div class="sb-step-num">1</div>
-  <div>Upload a JPG or PNG insect photo</div>
-</div>
-<div class="sb-step">
-  <div class="sb-step-num">2</div>
-  <div>Click <strong style="color:var(--teal);">Run Analysis</strong></div>
-</div>
-<div class="sb-step">
-  <div class="sb-step-num">3</div>
-  <div>Review species ID &amp; confidence scores</div>
-</div>
-
-<div class="sb-section">Image tips</div>
-<div style="font-size:11px;color:var(--text-muted);line-height:2.1;
-            font-family:'JetBrains Mono',monospace;">
-  · Clear, well-lit close-up<br>
-  · Insect fills the frame<br>
-  · Avoid blur &amp; overexposure
-</div>
-
-<div style="margin-top:2.5rem;padding-top:1.25rem;border-top:1px solid var(--border);">
-  <div style="font-size:10px;color:var(--text-muted);
-              font-family:'JetBrains Mono',monospace;">
-    Built with PyTorch &amp; Streamlit
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TOPBAR
-# ─────────────────────────────────────────────────────────────────────────────
-
-st.markdown(f"""
-<div class="topbar">
-  <div class="logo-mark">
-    <div class="logo-icon">🔬</div>
-    <div class="logo-text">Pest<span class="logo-dot">ID</span></div>
-  </div>
-  <div class="nav-pills">
-    <div class="nav-pill active">
-      <span class="live-dot" style="width:5px;height:5px;margin-right:4px;vertical-align:middle;"></span>
-      Live
-    </div>
-    <div class="nav-pill">ResNet-50</div>
-    <div class="nav-pill">IP102 · {NUM_CLASSES} classes</div>
-    <div class="nav-pill">{str(device).upper()}</div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# PAGE HERO
-# ─────────────────────────────────────────────────────────────────────────────
-
-st.markdown("""
-<div class="page-hero">
-  <div class="page-tag">· Deep Learning · Entomology · Real-time</div>
-  <h1 class="page-title">Insect Pest Classifier</h1>
-  <p class="page-desc">
-    Upload a photograph and the model identifies the pest species in seconds —
-    powered by ResNet-50 transfer learning on the IP102 benchmark.
-  </p>
-</div>
-""", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# STATS ROW
-# ─────────────────────────────────────────────────────────────────────────────
-
-st.markdown(f"""
-<div class="stats-row" style="margin-bottom:2rem;">
-  <div class="stat-cell">
-    <div class="stat-cell-label">Model</div>
-    <div class="stat-cell-value" style="font-size:15px;letter-spacing:0;">ResNet-50</div>
-  </div>
-  <div class="stat-cell">
-    <div class="stat-cell-label">Species</div>
-    <div class="stat-cell-value teal">{NUM_CLASSES}</div>
-  </div>
-  <div class="stat-cell">
-    <div class="stat-cell-label">Backend</div>
-    <div class="stat-cell-value" style="font-size:15px;letter-spacing:0;">{str(device).upper()}</div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TWO-COLUMN LAYOUT
-# ─────────────────────────────────────────────────────────────────────────────
-
-col_left, col_right = st.columns([9, 11], gap="large")
-
-# ── LEFT — Upload ─────────────────────────────────────────────────────────────
-with col_left:
-    st.markdown('<div class="slabel">Image Input</div>', unsafe_allow_html=True)
-
-    uploaded_file = st.file_uploader(
-        "Drop image here",
-        type=["jpg",
-    "jpeg",
-    "png",
-    "webp",
-    "bmp",
-    "tiff"],
-        label_visibility="collapsed",
-    )
-
-    if uploaded_file:
         image = Image.open(uploaded_file).convert("RGB")
-        st.image(image, use_container_width=True)
-        st.markdown(f"""
-<div class="file-meta">
-  <span>{uploaded_file.name}</span>
-  <span>{image.width} × {image.height} px &nbsp;·&nbsp; {uploaded_file.size // 1024} KB</span>
-</div>
-""", unsafe_allow_html=True)
 
-        input_tensor = transform(image).unsqueeze(0).to(device)
-        st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
-        run_btn = st.button("⚡  Run Analysis")
-    else:
-        st.markdown("""
-<div class="empty" style="min-height:260px;">
-  <div class="empty-icon">🖼️</div>
-  <div class="empty-title">No image selected</div>
-  <div class="empty-sub">Drag & drop or click to upload a JPG or PNG</div>
-</div>
-""", unsafe_allow_html=True)
-        run_btn = False
+        st.image(
+            image,
+            caption="Uploaded Image",
+            use_container_width=True
+        )
 
-# ── RIGHT — Results ────────────────────────────────────────────────────────────
-with col_right:
-    st.markdown('<div class="slabel">Analysis Results</div>', unsafe_allow_html=True)
+        input_tensor = transform(image)
 
-    if uploaded_file and run_btn:
-        # ── Live inference with progress ──────────────────────────────────────
-        progress_placeholder = st.empty()
-        status_placeholder   = st.empty()
+        input_tensor = input_tensor.unsqueeze(0).to(device)
 
-        steps = [
-            ("Preprocessing image…",   25),
-            ("Running forward pass…",   60),
-            ("Computing softmax…",      85),
-            ("Ranking predictions…",   100),
-        ]
-        bar = progress_placeholder.progress(0)
-        for label, pct in steps:
-            status_placeholder.markdown(
-                f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;'
-                f'color:var(--teal);margin-bottom:0.5rem;">{label}</div>',
-                unsafe_allow_html=True,
+        # =================================================
+        # PREDICT BUTTON
+        # =================================================
+
+        if st.button("Predict"):
+
+            with st.spinner("Analyzing Image..."):
+
+                with torch.no_grad():
+
+                    output = model(input_tensor)
+
+                    # =====================================
+                    # TEMPERATURE SCALING
+                    # REDUCES FAKE 100% CONFIDENCE
+                    # =====================================
+
+                    probs = F.softmax(
+                        output / 2.0,
+                        dim=1
+                    )
+
+                    confidence, predicted = torch.max(
+                        probs,
+                        1
+                    )
+
+                    predicted_idx = predicted.item()
+
+                    predicted_class = class_names[
+                        predicted_idx
+                    ]
+
+                    confidence_score = (
+                        confidence.item() * 100
+                    )
+
+            # =================================================
+            # RESULTS
+            # =================================================
+
+            st.success(
+                "Prediction Completed Successfully"
             )
-            bar.progress(pct)
-            time.sleep(0.25)
 
-        progress_placeholder.empty()
-        status_placeholder.empty()
+            st.markdown("## Prediction Result")
 
-        # ── Actual inference ──────────────────────────────────────────────────
-        with torch.no_grad():
-            output = model(input_tensor)
-            probs  = F.softmax(output, dim=1)
-            conf, pred  = torch.max(probs, 1)
-            predicted_class = class_names[pred.item()]
-            conf_score      = conf.item() * 100
+            st.markdown(
+                f"### 🐞 Predicted Class: {predicted_class}"
+            )
 
-        top5_prob, top5_catid = torch.topk(probs, 5)
-        max_prob = top5_prob[0][0].item() * 100
+            st.markdown(
+                f"### Confidence: {confidence_score:.2f}%"
+            )
 
-        # Confidence theming
-        if conf_score >= 75:
-            fill    = "#00E5C8"; chip_bg = "rgba(0,229,200,0.10)"
-            chip_fg = "#00E5C8"; dot_c   = "#00E5C8"; label = "High Confidence"
-        elif conf_score >= 45:
-            fill    = "#F5A623"; chip_bg = "rgba(245,166,35,0.10)"
-            chip_fg = "#F5A623"; dot_c   = "#F5A623"; label = "Moderate Confidence"
-        else:
-            fill    = "#FF5C6A"; chip_bg = "rgba(255,92,106,0.10)"
-            chip_fg = "#FF5C6A"; dot_c   = "#FF5C6A"; label = "Low Confidence"
+            st.markdown(
+                "### Model Used: ResNet50 + FPN"
+            )
 
-        # ── Result card ───────────────────────────────────────────────────────
-        st.markdown(f"""
-<div class="result-card">
-  <div class="result-eyebrow">Top Prediction</div>
-  <div class="result-name">{predicted_class}</div>
+            # =================================================
+            # TOP 5 PREDICTIONS
+            # =================================================
 
-  <div class="conf-meta">
-    <span class="conf-label">Confidence score</span>
-    <span class="conf-value">{conf_score:.1f}%</span>
-  </div>
-  <div class="conf-track">
-    <div class="conf-fill" style="width:{conf_score:.1f}%;background:{fill};"></div>
-  </div>
-  <div>
-    <span class="status-badge" style="background:{chip_bg};color:{chip_fg};">
-      <svg width="6" height="6" viewBox="0 0 6 6" aria-hidden="true">
-        <circle cx="3" cy="3" r="3" fill="{dot_c}"/>
-      </svg>
-      {label}
-    </span>
-  </div>
-</div>
-""", unsafe_allow_html=True)
+            st.markdown("## Top 5 Predictions")
 
-        # ── Ranking table ─────────────────────────────────────────────────────
-        st.markdown('<div class="slabel" style="margin-top:1.5rem;">Top 5 Candidates</div>', unsafe_allow_html=True)
+            top5_prob, top5_catid = torch.topk(
+                probs,
+                5
+            )
 
-        rows_html = ""
-        for i in range(5):
-            cls  = class_names[top5_catid[0][i]]
-            prob = top5_prob[0][i].item() * 100
-            bw   = round((prob / max_prob) * 100)
-            r1   = "r1" if i == 0 else ""
-            label_rank = f"#{i+1}"
-            rows_html += f"""
-<div class="rank-row {r1}">
-  <div class="rank-num {r1}">{label_rank}</div>
-  <div class="rank-name {r1}">{cls}</div>
-  <div class="bar-wrap">
-    <div class="bar-fill {r1}" style="width:{bw}%;"></div>
-  </div>
-  <div class="rank-pct {r1}">{prob:.1f}%</div>
-</div>"""
+            for i in range(5):
 
-        st.markdown(f"""
-<div class="rank-table">
-  <div class="rank-thead">
-    <div class="th">Rank</div>
-    <div class="th">Species</div>
-    <div class="th">Confidence</div>
-    <div class="th" style="text-align:right;">Score</div>
-  </div>
-  {rows_html}
-</div>
-""", unsafe_allow_html=True)
+                cls_idx = top5_catid[0][i].item()
 
-        # ── Meta row ──────────────────────────────────────────────────────────
-        st.markdown(f"""
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:1rem;align-items:center;">
-  <span class="chip live"><span class="live-dot" style="width:5px;height:5px;margin-right:3px;vertical-align:middle;"></span>Inference complete</span>
-  <span class="chip">ResNet-50</span>
-  <span class="chip">{str(device).upper()}</span>
-  <span class="chip">Top-5 softmax</span>
-</div>
-""", unsafe_allow_html=True)
+                cls_name = class_names[cls_idx]
 
-    elif uploaded_file and not run_btn:
-        st.markdown("""
-<div class="empty" style="min-height:340px;">
-  <div class="empty-icon">⚡</div>
-  <div class="empty-title">Ready to analyse</div>
-  <div class="empty-sub">Click <strong style="color:var(--teal);">Run Analysis</strong> to identify the species.</div>
-</div>
-""", unsafe_allow_html=True)
+                prob = (
+                    top5_prob[0][i].item() * 100
+                )
 
-    else:
-        st.markdown("""
-<div class="empty" style="min-height:340px;">
-  <div class="empty-icon">📡</div>
-  <div class="empty-title">Awaiting input</div>
-  <div class="empty-sub">Upload an insect photograph on the left to begin.</div>
-</div>
-""", unsafe_allow_html=True)
+                st.write(
+                    f"{i+1}. Class {cls_name} — {prob:.2f}%"
+                )
+
+    except Exception as e:
+
+        st.error(
+            f"Error loading image: {e}"
+        )
+
+# =====================================================
+# FOOTER
+# =====================================================
+
+st.markdown("---")
+
+st.markdown(
+    "Developed using PyTorch and Streamlit"
+)
