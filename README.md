@@ -47,7 +47,7 @@ The main goals of this project are:
 
 Residual Network (ResNet50) is used as the baseline model for image classification.
 
-Features:
+### Features
 - Deep residual learning
 - Skip connections
 - Strong feature extraction
@@ -59,7 +59,7 @@ Features:
 
 Feature Pyramid Network (FPN) improves feature representation for small-scale insect objects.
 
-Advantages:
+### Advantages
 - Multi-scale feature extraction
 - Better small object recognition
 - Improved classification accuracy
@@ -75,7 +75,7 @@ Soft Voting Ensemble combines predictions from:
 
 Final prediction is obtained using averaged probabilities.
 
-Benefits:
+### Benefits
 - Better generalization
 - Higher robustness
 - Improved overall accuracy
@@ -90,8 +90,17 @@ The project includes a professional Streamlit web application featuring:
 - Upload insect images
 - Top-5 prediction results
 - Confidence visualization
-- Dark modern UI
+- Modern dark UI
 - GPU/CPU support
+
+---
+
+# 🌐 Live Deployment
+
+The application is deployed using Streamlit Cloud and can be accessed here:
+
+🔗 **Live Demo:**  
+https://abdelrahmansa04-insect-pest-classification-app-ap6y2v.streamlit.app/
 
 ---
 
@@ -113,121 +122,3 @@ project/
 │   └── college_logo.png
 │
 └── dataset/
-```
-
----
-
-# ⚙️ Technologies Used
-
-- Python
-- PyTorch
-- Torchvision
-- Streamlit
-- OpenCV
-- PIL
-- NumPy
-
----
-
-# 🚀 Installation
-
-## Clone Repository
-
-```bash
-git clone https://github.com/yourusername/insect-pest-classification.git
-cd insect-pest-classification
-```
-
----
-
-## Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Run Application
-
-```bash
-streamlit run app.py
-```
-
----
-
-# 📊 Dataset
-
-The project is trained on the **IP102 Dataset**, a large-scale benchmark dataset for insect pest classification.
-
-Dataset contains:
-- Multiple insect pest categories
-- Real-world agricultural images
-- Fine-grained insect classes
-
----
-
-# 📈 Results
-
-| Model | Validation Accuracy |
-|------|------|
-| ResNet50 | ~68% |
-| ResNet50 + FPN | ~66% |
-| Ensemble | Improved Stability & Generalization |
-
----
-
-# 👨‍💻 Students
-
-- **Abdelrahman Saeed Abdelraoud** — 120220303
-- **Youssef Ibrahim Mohammed** — 120220298
-- **Mohamed Tareq Farouq** — 120220307
-- **Hossam El Den Mahmoud** — 120220313
-- **Mohamed Ahmed Abd Al Fatah** — 120220328
-- **Ziad Reda** — 120220348
-
----
-
-# 🏛️ Academic Information
-
-Faculty of Computers and Artificial Intelligence  
-Computer Vision Course  
-Final Year Project
-
----
-
-# 📷 Application Preview
-
-<p align="center">
-  <img src="EJUST.png" width="100%">
-</p>
-
----
-
-# 🔮 Future Improvements
-
-- Add Residual Attention Networks (RAN)
-- Add MMAL-Net
-- Improve ensemble performance
-- Mobile deployment
-- Real-time camera inference
-- Larger agricultural datasets
-
----
-
-# 📜 License
-
-This project is developed for academic and educational purposes.
-
----
-
-# ⭐ Acknowledgments
-
-Special thanks to:
-
-- Faculty members
-- Teaching assistants
-- Open-source AI community
-- PyTorch & Streamlit teams
-
----
